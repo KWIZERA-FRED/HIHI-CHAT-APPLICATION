@@ -1,0 +1,8 @@
+venv/
+.env
+__pycache__/
+*.pyc
+.dart_tool/
+build/
+*.iml
+.idea/
