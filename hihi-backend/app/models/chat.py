@@ -44,3 +44,29 @@ def get_user_chats(user_id: str, limit: int = 30, before: datetime | None = None
 
 def find_chat_by_id(chat_id: str) -> dict | None:
     return mongo.db.chats.find_one({"_id": ObjectId(chat_id)})  
+
+def is_participant(chat: dict, user_id: str) -> bool:
+      """Authorization check — call before letting a user read/send in a chat."""
+      return ObjectId(user_id) in chat["participants"]
+
+def update_last_message(chat_id: str,message_preview: dict ) -> None:
+      """
+    Denormalized update, called right after a message is inserted.
+    message_preview should be small: {content, sender_id, created_at}
+    """
+      mongo.db.chats.update_one(
+           {"_id": ObjectId(chat_id)},
+           {
+                "$set": {
+                     "last_message": message_preview,
+                     "updated_at": datetime.now(timezone.utc),
+                }
+           },
+           )
+
+def create_indexes() -> None:
+     # Chat list: filter by participant, sort by recency — single index covers both.
+     mongo.db.chats.create_index([("participants", 1),("updated_at", -1)])
+      # Speeds up find_existing_direct_chat's $all/$size lookup.
+     mongo.db.chats.create_index([("participants", 1), ("is_group", 1)])
+
