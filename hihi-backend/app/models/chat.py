@@ -54,7 +54,7 @@ def update_last_message(chat_id: str,message_preview: dict ) -> None:
     Denormalized update, called right after a message is inserted.
     message_preview should be small: {content, sender_id, created_at}
     """
-      mongo.db.chats.update_one(
+      mongo.db.chats.update_one(   
            {"_id": ObjectId(chat_id)},
            {
                 "$set": {

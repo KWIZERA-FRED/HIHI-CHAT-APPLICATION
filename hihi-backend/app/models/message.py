@@ -43,3 +43,26 @@ def mark_messages_read(chat_id: str, user_id: str) -> int:
         {"$addToSet": {"read_by": ObjectId(user_id)}},
     )
     return result.modified_count
+
+def count_unread(chat_id: str, user_id: str) -> int:
+    return mongo.db.messages.count_documents({
+        "chat_id": ObjectId(chat_id),
+        "read_by": {"$ne": ObjectId(user_id)},
+    })
+
+def to_public_dict(message: dict) -> dict:
+    return {
+        "id": str(message["_id"]),
+        "chat_id": str(message["chat_id"]),
+        "sender_id": str(message["sender_id"]),
+        "content": message["content"],
+        "message_type": message["message_type"],
+        "read_by": [str(uid) for uid in message.get("read_by", [])],
+        "created_at": message["created_at"].isoformat(),
+    }
+
+def create_indexes() -> None:
+    # Message history: filter by chat, sort by time — the highest-traffic index in the app.
+    mongo.db.messages.create_index([("chat_id", 1), ("created_at", -1)])
+    # Unread counts / mark-as-read queries.
+    mongo.db.messages.create_index([("chat_id", 1), ("read_by", 1)])

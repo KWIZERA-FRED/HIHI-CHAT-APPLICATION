@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
 from bson import ObjectId
-from extensions import mongo, bycrpt
+from app.extensions import mongo, bcrypt
 
 def create_user(username: str, email: str, password: str) -> dict:
       """Insert a new user and return the created document."""
-      password_hash = bycrpt.generate_password_hash(password).decode("utf-8")
+      password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
       user = {
             "username": username,
             "email": email.lower(),
+            "password_hash": password_hash,
             "avatar_url": None,
             "is_online": False,
             "last_seen": datetime.now(timezone.utc),
@@ -43,7 +44,7 @@ def search_users(query: str, exclude_id: str, limit: int = 20) -> list[dict]:
              ).limit(mimit))
 
 def check_password(user: dict, password: str) -> bool:
-      return bycrpt.check_password_hash(user["password_hash"],password)
+      return bcrypt.check_password_hash(user["password_hash"],password)
 
 def set_online_status(user_id: str, is_online: bool) -> None:
       mongo.db.users.update_one(
