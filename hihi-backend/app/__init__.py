@@ -2,18 +2,24 @@ from flask import Flask
 from app.config import DevConfig
 from app.extensions import mongo, bcrypt, socketio, cors
 from app.models import init_indexes
+from app.routes.auth import auth_bp
 
 def create_app(config_class=DevConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Initialize extensions
     mongo.init_app(app)
     bcrypt.init_app(app)
     cors.init_app(app)
     socketio.init_app(app, async_mode="threading")
     
+    # Create/confirm MongoDB indexes on startup
     with app.app_context():
         init_indexes()
+    
+    # Register blueprints
+    app.register_blueprint(auth_bp)
 
     @app.route("/health")
     def health_check():
