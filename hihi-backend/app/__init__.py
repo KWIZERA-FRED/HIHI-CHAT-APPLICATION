@@ -3,6 +3,9 @@ from app.config import DevConfig
 from app.extensions import mongo, bcrypt, socketio, cors
 from app.models import init_indexes
 from app.routes.auth import auth_bp
+from app.routes.chat import chat_bp
+from app.routes.message import message_bp
+from app import sockets
 
 def create_app(config_class=DevConfig):
     app = Flask(__name__)
@@ -20,6 +23,8 @@ def create_app(config_class=DevConfig):
     
     # Register blueprints
     app.register_blueprint(auth_bp)
+    app.register_blueprint(chat_bp)
+    app.register_blueprint(message_bp)
 
     @app.route("/health")
     def health_check():

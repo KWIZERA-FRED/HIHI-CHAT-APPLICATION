@@ -17,6 +17,27 @@ def create_chat(participant_ids: list[str], is_group: bool = False, group_name: 
     chat["_id"] = result.inserted_id
     return chat
 
+
+def to_public_dict(chat: dict) -> dict:
+    """Convert MongoDB values to JSON-safe values for API responses."""
+    last_message = chat.get("last_message")
+    if last_message:
+        last_message = {
+            **last_message,
+            "sender_id": str(last_message["sender_id"]),
+            "created_at": last_message["created_at"].isoformat(),
+        }
+
+    return {
+        "id": str(chat["_id"]),
+        "participant_ids": [str(user_id) for user_id in chat["participants"]],
+        "is_group": chat["is_group"],
+        "group_name": chat.get("group_name"),
+        "last_message": last_message,
+        "created_at": chat["created_at"].isoformat(),
+        "updated_at": chat["updated_at"].isoformat(),
+    }
+
 def find_existing_direct_chat(user_a: str, user_b: str) -> dict | None:
      """Prevent duplicate 1:1 chats between the same two users."""
      return mongo.db.chats.find_one({
